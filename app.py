@@ -62,8 +62,41 @@ def login():
 
 @app.route('/api/addTask', methods=['POST'])
 def addTask():
-    return jsonify({'message': 'Not Implemented Yet!'}), 200
+    data = request.get_json()
+    username = data['username']
+    date = datetime.utcnow()
+    contents = data['contents']
 
+    # Check the user we're adding task for exists
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+
+    new_task = Task(user_with_task=username, date=date, contents=contents)
+
+    db.session.add(new_task)
+    db.session.commit()
+
+    return jsonify({'message': 'New task added!'}), 201
+
+@app.route('/api/getUserTasks', methods=['POST'])
+def getUserTasks():
+    data = request.get_json()
+    username = data['username']
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        tasks = Task.query.filter_by(user_with_task=username).all()
+        task_list = []
+        for task in tasks:
+            task_data = {}
+            task_data['date'] = task.date
+            task_data['completed'] = task.completed
+            task_data['contents'] = task.contents
+            task_list.append(task_data)
+        return jsonify({'tasks': task_list}), 200
 
 
 
