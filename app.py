@@ -17,7 +17,6 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-
 @app.route('/api/isAlive', methods=['GET'])
 @cross_origin(origin='*', headers=['Content-Type','Authorization'])
 def is_alive():
@@ -92,14 +91,47 @@ def getUserTasks():
         task_list = []
         for task in tasks:
             task_data = {}
+            task_data['task_id'] = task.task_id
+            task_data['date'] = task.date
+            task_data['completed'] = task.completed
+            task_data['contents'] = task.contents
+            task_list.append(task_data)
+        return jsonify({'tasks': task_list}), 200
+    
+@app.route('/api/getIncompleteUserTasks', methods=['POST'])
+def getUncompletedUserTasks():
+    data = request.get_json()
+    username = data['username']
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        tasks = Task.query.filter_by(user_with_task=username, completed=False).all()
+        task_list = []
+        for task in tasks:
+            task_data = {}
+            task_data['task_id'] = task.task_id
             task_data['date'] = task.date
             task_data['completed'] = task.completed
             task_data['contents'] = task.contents
             task_list.append(task_data)
         return jsonify({'tasks': task_list}), 200
 
-
-
+@app.route('/api/updateTask', methods=['PATCH'])
+def updateTask():
+    data = request.get_json()
+    task_id = data['task_id']
+    task = Task.query.filter_by(task_id=task_id).first()
+    if not task:
+        return jsonify({'message': 'Task does not exist!'}), 404
+    else:
+        updated_contents = data['contents'] if bool(data.get('contents')) else task.contents
+        updated_completion = bool(data.get('completed'))
+        
+        new_task = Task.query.filter_by(task_id=task_id).update(dict(contents=updated_contents, completed=updated_completion))
+        db.session.commit()
+        return jsonify({'message': 'Task updated!'}), 200
 
 
 
