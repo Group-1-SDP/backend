@@ -2,12 +2,14 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy  import SQLAlchemy
 from flask_cors import CORS, cross_origin
 from flask_bcrypt import Bcrypt
+from flask_socketio import SocketIO
 from datetime import datetime
 from models import db, User, Task
 
 import re
 
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tickbox.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #to supress warning
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -132,16 +134,25 @@ def updateTask():
         new_task = Task.query.filter_by(task_id=task_id).update(dict(contents=updated_contents, completed=updated_completion))
         db.session.commit()
         return jsonify({'message': 'Task updated!'}), 200
+    
+@app.route("/websocket/phoneConnected", methods=['GET'])
+def phoneConnected():
+    socketio.emit('phoneConnected', broadcast=True)
+    return jsonify({'message': 'Phone connected!'}), 200
 
+@app.route("/websocket/phoneDisconnected", methods=['GET'])
+def phoneDisconnected():
+    socketio.emit('phoneDisconnected', broadcast=True)
+    return jsonify({'message': 'Phone disconnected!'}), 200
 
+@socketio.on('connect')
+def handle_connect():
+    print('client connected!')
 
-
-
-
-
-
-
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('client disconnected!')
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+    socketio.run(app, port=5000, debug=True)
