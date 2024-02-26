@@ -132,9 +132,30 @@ def updateTask():
         updated_completion = bool(data.get('completed'))
         
         new_task = Task.query.filter_by(task_id=task_id).update(dict(contents=updated_contents, completed=updated_completion))
+        # We also want to increment the User's total_tasks_completed
+        user = User.query.filter_by(username=task.user_with_task).first()
+        user.total_tasks_completed += 1
         db.session.commit()
         return jsonify({'message': 'Task updated!'}), 200
-    
+
+@app.route('api/getUserDetails', methods=['POST'])
+def getUserDetails():
+    data = request.get_json()
+    username = data['username']
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        user_data = {}
+        user_data['username'] = user.username
+        user_data['email'] = user.email
+        user_data['total_tasks_completed'] = user.total_tasks_completed
+        user_data['phone_in_box_time'] = user.phone_in_box_time
+        user_data['phone_in_box_rn'] = user.phone_in_box_rn
+        user_data['phone_in_box_since'] = user.phone_in_box_since
+        user_data['friends'] = user.friends
+        return jsonify({'user': user_data}), 200
+
 @app.route("/websocket/phoneConnected", methods=['GET'])
 def phoneConnected():
     socketio.emit('phoneConnected', broadcast=True)
