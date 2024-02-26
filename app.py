@@ -138,7 +138,7 @@ def updateTask():
         db.session.commit()
         return jsonify({'message': 'Task updated!'}), 200
 
-@app.route('api/getUserDetails', methods=['POST'])
+@app.route('/api/getUserDetails', methods=['POST'])
 def getUserDetails():
     data = request.get_json()
     username = data['username']
@@ -148,11 +148,9 @@ def getUserDetails():
     else:
         user_data = {}
         user_data['username'] = user.username
-        user_data['email'] = user.email
         user_data['total_tasks_completed'] = user.total_tasks_completed
         user_data['phone_in_box_time'] = user.phone_in_box_time
         user_data['phone_in_box_rn'] = user.phone_in_box_rn
-        user_data['phone_in_box_since'] = user.phone_in_box_since
         user_data['friends'] = user.friends
         return jsonify({'user': user_data}), 200
 

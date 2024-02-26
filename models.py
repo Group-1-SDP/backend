@@ -20,8 +20,6 @@ class User(db.Model):
     phone_in_box_time = db.Column(db.Integer, default=0, nullable=False)
     # phone currently in box
     phone_in_box_rn = db.Column(db.Boolean, default=False, nullable=False)
-    # phone in box since (time)
-    phone_in_box_since = db.Column(db.DateTime, nullable=False)
     # friends (array of ids)
     friends = db.Column(db.String(200), default="", nullable=False)
 
