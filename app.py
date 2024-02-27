@@ -61,6 +61,7 @@ def login():
     
 @app.route('/api/addTask', methods=['POST'])
 def addTask():
+    #socketio.emit('task-complete')
     data = request.get_json()
     username = data['username']
     task_id = data['task_id']
@@ -142,6 +143,7 @@ def getTopIncompleteTask():
 
 @app.route('/api/updateTask', methods=['PATCH'])
 def updateTask():
+    socketio.emit('task-complete')
     data = request.get_json()
     task_id = data['task_id']
     task = Task.query.filter_by(task_id=task_id).first()
@@ -250,6 +252,10 @@ def handle_box_phone_connected():
 @socketio.on('boxPhoneDisconnected')
 def handle_box_phone_disconnected():
     socketio.emit('phoneDisconnected', broadcast=True)
+
+@socketio.on('task-complete')
+def handle_task_complete():
+    socketio.emit('task-complete', broadcast=True)
 
 if __name__ == '__main__':
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
