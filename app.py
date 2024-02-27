@@ -225,14 +225,14 @@ def getFriends():
         else:
             return jsonify({'friends': friends}), 200
      
-@app.route("/websocket/phoneConnected", methods=['GET'])
+@app.route("/websocket/phoneConnected", methods=['POST'])
 def phoneConnected():
-    socketio.emit('phoneConnected', broadcast=True)
+    socketio.emit('phoneConnected')
     return jsonify({'message': 'Phone connected!'}), 200
 
 @app.route("/websocket/phoneDisconnected", methods=['POST'])
 def phoneDisconnected():
-    socketio.emit('phoneDisconnected', broadcast=True)
+    socketio.emit('phoneDisconnected')
     return jsonify({'message': 'Phone disconnected!'}), 200
 
 @socketio.on('connect')
