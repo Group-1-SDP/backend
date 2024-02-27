@@ -65,6 +65,7 @@ def login():
 def addTask():
     data = request.get_json()
     username = data['username']
+    task_id = data['task_id']
     date = datetime.utcnow()
     contents = data['contents']
 
@@ -73,7 +74,7 @@ def addTask():
     if not user:
         return jsonify({'message': 'User does not exist!'}), 404
 
-    new_task = Task(user_with_task=username, date=date, contents=contents)
+    new_task = Task(task_id=task_id, user_with_task=username, date=date, contents=contents)
 
     db.session.add(new_task)
     db.session.commit()
@@ -119,6 +120,27 @@ def getUncompletedUserTasks():
             task_data['contents'] = task.contents
             task_list.append(task_data)
         return jsonify({'tasks': task_list}), 200
+    
+@app.route('/api/getTopIncompleteTask', methods=['POST'])
+def getTopIncompleteTask():
+    data = request.get_json()
+    username = data['username']
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        tasks = Task.query.filter_by(user_with_task=username, completed=False)
+        task = tasks.order_by(Task.date).first()
+        if not task:
+            return jsonify({'message': 'No incomplete tasks!'}), 404
+        else:
+            task_data = {}
+            task_data['task_id'] = task.task_id
+            task_data['date'] = task.date
+            task_data['completed'] = task.completed
+            task_data['contents'] = task.contents
+            return jsonify({'task': task_data}), 200
 
 @app.route('/api/updateTask', methods=['PATCH'])
 def updateTask():
@@ -135,12 +157,12 @@ def updateTask():
         db.session.commit()
         return jsonify({'message': 'Task updated!'}), 200
     
-@app.route("/websocket/phoneConnected", methods=['GET'])
+@app.route("/websocket/phoneConnected", methods=['POST'])
 def phoneConnected():
     socketio.emit('phoneConnected', broadcast=True)
     return jsonify({'message': 'Phone connected!'}), 200
 
-@app.route("/websocket/phoneDisconnected", methods=['GET'])
+@app.route("/websocket/phoneDisconnected", methods=['POST'])
 def phoneDisconnected():
     socketio.emit('phoneDisconnected', broadcast=True)
     return jsonify({'message': 'Phone disconnected!'}), 200
@@ -153,6 +175,13 @@ def handle_connect():
 def handle_disconnect():
     print('client disconnected!')
 
+@socketio.on('boxPhoneConnected')
+def handle_box_phone_connected():
+    socketio.emit('phoneConnected', broadcast=True)
+
+@socketio.on('boxPhoneDisconnected')
+def handle_box_phone_disconnected():
+    socketio.emit('phoneDisconnected', broadcast=True)
 
 if __name__ == '__main__':
-    socketio.run(app, port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)

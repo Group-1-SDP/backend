@@ -17,7 +17,7 @@ class User(db.Model):
 
 class Task(db.Model):
     __tablename__ = 'tasks'
-    task_id = db.Column(db.String(5), default=generateString, nullable=False, unique=True, primary_key=True)
+    task_id = db.Column(db.String(5), nullable=False, unique=True, primary_key=True)
     user_with_task = db.Column(db.String(80), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     completed = db.Column(db.Boolean, default=False, nullable=False)
