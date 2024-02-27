@@ -49,7 +49,7 @@ def register():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data['tickBoxID']
+    username = data['username']
     password = data['password']
     user = User.query.filter_by(username=username).first()
     if not user:
