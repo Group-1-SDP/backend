@@ -51,7 +51,6 @@ def login():
     data = request.get_json()
     username = data['username']
     password = data['password']
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'message': 'User does not exist!'}), 404
@@ -60,7 +59,6 @@ def login():
     else:
         return jsonify({'message': 'Logged in successfully!'}), 200
     
-
 @app.route('/api/addTask', methods=['POST'])
 def addTask():
     data = request.get_json()
@@ -154,10 +152,80 @@ def updateTask():
         updated_completion = bool(data.get('completed'))
         
         new_task = Task.query.filter_by(task_id=task_id).update(dict(contents=updated_contents, completed=updated_completion))
+        # We also want to increment the User's total_tasks_completed
+        user = User.query.filter_by(username=task.user_with_task).first()
+        user.total_tasks_completed += 1
         db.session.commit()
         return jsonify({'message': 'Task updated!'}), 200
-    
-@app.route("/websocket/phoneConnected", methods=['POST'])
+
+@app.route('/api/getUserDetails', methods=['POST'])
+def getUserDetails():
+    data = request.get_json()
+    username = data['username']
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        user_data = {}
+        user_data['username'] = user.username
+        user_data['total_tasks_completed'] = user.total_tasks_completed
+        user_data['phone_in_box_time'] = user.phone_in_box_time
+        user_data['phone_in_box_rn'] = user.phone_in_box_rn
+        user_data['friends'] = user.friends
+        return jsonify({'user': user_data}), 200
+
+@app.route('/api/getAllUsers', methods=['GET'])
+def getAllUsers():
+    users = User.query.all()
+    user_list = []
+    for user in users:
+        user_data = {}
+        user_data['username'] = user.username
+        user_data['total_tasks_completed'] = user.total_tasks_completed
+        user_data['phone_in_box_time'] = user.phone_in_box_time
+        user_data['phone_in_box_rn'] = user.phone_in_box_rn
+        user_data['friends'] = user.friends
+        user_data['id'] = user.id
+        user_list.append(user_data)
+    return jsonify({'users': user_list}), 200
+
+@app.route('/api/addFriend', methods=['POST'])
+def addFriend():
+    data = request.get_json()
+    username = data['username']
+    friend_to_add_username = data['friend_to_add']
+    user = User.query.filter_by(username=username).first()
+    friend_to_add = User.query.filter_by(username=friend_to_add_username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    if not friend_to_add:
+        return jsonify({'message': 'User with that username not found!'}), 404
+    else:
+        friends_list = user.friends.split(',')
+        if friend_to_add_username in friends_list:
+            return jsonify({'message': 'Friend already added!'}), 409
+        else:
+            friends_list.append(friend_to_add_username)
+            user.friends = ','.join(friends_list)
+            db.session.commit()
+            return jsonify({'message': 'Friend added successfully!'}), 200
+
+@app.route('/api/getFriends', methods=['POST'])
+def getFriends():
+    data = request.get_json()
+    username = data['username']
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+    else:
+        friends = user.friends.split(',')
+        user_has_no_friends = len(friends) == 1 and friends[0] == ''
+        if user_has_no_friends:
+            return jsonify({'message': 'User has no friends!'}), 404
+        else:
+            return jsonify({'friends': friends}), 200
+     
+@app.route("/websocket/phoneConnected", methods=['GET'])
 def phoneConnected():
     socketio.emit('phoneConnected', broadcast=True)
     return jsonify({'message': 'Phone connected!'}), 200
