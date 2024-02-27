@@ -49,9 +49,8 @@ def register():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data['username']
+    username = data['tickBoxID']
     password = data['password']
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
     user = User.query.filter_by(username=username).first()
     if not user:
         return jsonify({'message': 'User does not exist!'}), 404
