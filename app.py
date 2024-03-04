@@ -58,7 +58,25 @@ def login():
         return jsonify({'message': 'Invalid password!'}), 401
     else:
         return jsonify({'message': 'Logged in successfully!'}), 200
+
+@app.route('/api/deleteUser', methods=['POST'])
+def deleteUser():
+    data = request.get_json()
+    username = data['username']
+    password = data['password']
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
     
+    if not bcrypt.check_password_hash(user.password, password):
+        return jsonify({'message': 'Invalid password!'}), 401
+    
+    db.session.delete(user)
+    db.session.commit()
+    
+    return jsonify({'message': 'User deleted successfully!'}), 200
+
 @app.route('/api/addTask', methods=['POST'])
 def addTask():
     #socketio.emit('task-complete')
