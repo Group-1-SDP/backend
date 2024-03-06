@@ -31,14 +31,18 @@ def register():
     email = data['email']
     username = data['username']
     password = data['password']
-    hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+    hashed_password = bcrypt.generate_password_hash(password)
     new_user = User(username=username, password=hashed_password, email=email)
-
+    
     userAlreadyExists = User.query.filter_by(username=username).first()
     if userAlreadyExists:
         return jsonify({'message': 'User already exists!'}), 409
     
-    emailRegex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
+    emailAlreadyExists = User.query.filter_by(email=email).first()
+    if emailAlreadyExists:
+        return jsonify({'message': 'Email already in use!'}), 408
+    
+    emailRegex = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
     if not re.search(emailRegex,email):
         return jsonify({'message': 'Invalid email!'}), 400
 
@@ -57,7 +61,7 @@ def login():
     if not bcrypt.check_password_hash(user.password, password):
         return jsonify({'message': 'Invalid password!'}), 401
     else:
-        return jsonify({'message': 'Logged in successfully!'}), 200
+        return jsonify({'message': 'Logged in successfully!', 'email': user.email}), 200
 
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
@@ -76,6 +80,69 @@ def deleteUser():
     db.session.commit()
     
     return jsonify({'message': 'User deleted successfully!'}), 200
+
+@app.route('/api/changePassword', methods=['POST'])
+def changePassword():
+    data = request.get_json()
+    
+    username = data['username']
+    oldPassword = data['oldPassword']
+    newPassword = data.get('newPassword', '').strip()
+
+    if len(newPassword) == 0:
+        return jsonify({'message': 'New password cannot be empty!'}), 400
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({'message': 'User does not exist!'}), 404
+
+    if not bcrypt.check_password_hash(user.password, oldPassword):
+        return jsonify({'message': 'Old password Incorrect!'}), 401
+    
+    if bcrypt.check_password_hash(user.password, newPassword):
+        return jsonify({'message': 'New password must be different from the old password!'}), 402
+    
+    if newPassword:
+        hashed_password = bcrypt.generate_password_hash(newPassword)
+        user.password = hashed_password
+    
+    db.session.commit()
+
+    return jsonify({'message': 'User password successfully changed!'}), 200
+
+@app.route('/api/updateAccountSettings', methods=['POST'])
+def updateAccountSettings():
+    data = request.get_json()
+    
+    username = data['username']
+    newUsername = data.get('newUsername', '').strip()
+    newEmail = data.get('newEmail', '').strip()
+
+    updated = False
+    user = User.query.filter_by(username=username).first()
+
+    if newUsername and newUsername != user.username:
+        if User.query.filter_by(username=newUsername).first():
+            return jsonify({'message': 'Username already taken!'}), 401
+        user.username = newUsername
+        updated = True  
+
+    if newEmail and newEmail != user.email:
+        if User.query.filter_by(email=newEmail).first():
+            return jsonify({'message': 'Email already taken!'}), 402
+        emailRegex = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
+        if not re.search(emailRegex, newEmail):
+            return jsonify({'message': 'Invalid email!'}), 403
+        user.email = newEmail
+        updated = True  
+
+    if updated:
+        db.session.commit()
+        return jsonify({'message': 'User account settings successfully updated!'}), 200
+    else:
+        return jsonify({'message': 'No changes detected to user account settings.'}), 200
+
 
 @app.route('/api/addTask', methods=['POST'])
 def addTask():
