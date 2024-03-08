@@ -31,6 +31,10 @@ def register():
     email = data['email']
     username = data['username']
     password = data['password']
+    
+    if not password or not email or not username:
+        return jsonify({'message': 'Please fill in everything!'}), 402
+    
     hashed_password = bcrypt.generate_password_hash(password)
     new_user = User(username=username, password=hashed_password, email=email)
     
