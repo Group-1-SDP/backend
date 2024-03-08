@@ -53,15 +53,17 @@ def register():
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data['username']
+    username_or_email = data['username']
     password = data['password']
-    user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(username=username_or_email).first()
+    if not user:
+        user = User.query.filter_by(email=username_or_email).first()
     if not user:
         return jsonify({'message': 'User does not exist!'}), 404
     if not bcrypt.check_password_hash(user.password, password):
         return jsonify({'message': 'Invalid password!'}), 401
     else:
-        return jsonify({'message': 'Logged in successfully!', 'email': user.email}), 200
+        return jsonify({'message': 'Logged in successfully!', 'email': user.email, 'username': user.username}), 200
 
 @app.route('/api/deleteUser', methods=['POST'])
 def deleteUser():
