@@ -52,7 +52,7 @@ def register():
 
     db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'New user created!'})
+    return jsonify({'message': 'New user created!', 'email': new_user.email, 'username': new_user.username})
 
 @app.route('/api/login', methods=['POST'])
 def login():
