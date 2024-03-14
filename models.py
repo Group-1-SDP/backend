@@ -1,34 +1,63 @@
 from flask_sqlalchemy import SQLAlchemy
 import random 
 import string 
+from datetime import datetime
 
 db = SQLAlchemy()
 
 def generateString():
     characters = string.ascii_uppercase + string.digits
-    return ''.join(random.choices(characters, k=5))
+    return ''.join(random.choices(characters, k=15))
 
 class User(db.Model):
-    __tablename__ = 'users'
-    id = db.Column(db.String(5), default=generateString, unique=True, primary_key=True)
-    username = db.Column(db.String(80), nullable=False, unique=True)
-    password = db.Column(db.String(120), nullable=False)
-    email = db.Column(db.String(120), nullable=False, unique=True)
-    # tasks completed total
-    total_tasks_completed = db.Column(db.Integer, default=0, nullable=False)
-    # phone in box time (seconds?)
-    phone_in_box_time = db.Column(db.Integer, default=0, nullable=False)
-    # phone currently in box
-    phone_in_box_rn = db.Column(db.Boolean, default=False, nullable=False)
-    # friends (array of ids)
-    friends = db.Column(db.String(200), default="", nullable=False)
+    id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
 
+    # user info
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    profile_picture = db.Column(db.String(255), default='')
+
+    # social
+    friends = db.relationship('Friendship', backref='user', lazy=True)
+    level = db.Column(db.Integer, default=1)
+    leagues = db.relationship('LeagueMembership', backref='user', lazy=True)
+
+    # study
+    progress_today = db.Column(db.Float, default=0.0)
+    study_hours_today = db.Column(db.Float, default=0.0)
+    study_hours_last_5 = db.Column(db.Float, default=0.0)
+    study_goal = db.Column(db.Float, default=0.0)
+    tasks = db.relationship('Task', backref='user', lazy=True)
+    
+
+class Friendship(db.Model):
+    id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
+
+    # social
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    friend_id = db.Column(db.Integer, nullable=False)
 
 class Task(db.Model):
-    __tablename__ = 'tasks'
-    task_id = db.Column(db.String(5), nullable=False, unique=True, primary_key=True)
-    user_with_task = db.Column(db.String(80), nullable=False)
-    date = db.Column(db.DateTime, nullable=False)
-    completed = db.Column(db.Boolean, default=False, nullable=False)
-    # completion time
-    contents = db.Column(db.String(200), nullable=False)
+    id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
+    user_id = db.Column(db.String(15), db.ForeignKey('user.id'), nullable=False)
+
+    # content
+    content = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    completed = db.Column(db.Boolean, default=False)
+    due_date = db.Column(db.DateTime, nullable=True)
+
+class League(db.Model):
+    id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    users = db.relationship('LeagueMembership', backref='league', lazy=True)
+
+class LeagueMembership(db.Model):
+    id = db.Column(db.String(15), default=generateString, primary_key=True)
+    league_id = db.Column(db.String(15), db.ForeignKey('league.id'), nullable=False)
+    user_id = db.Column(db.String(15), db.ForeignKey('user.id'), nullable=False)
+    rank = db.Column(db.Integer, nullable=False)
+
+
+
