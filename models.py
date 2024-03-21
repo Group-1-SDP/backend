@@ -1,4 +1,7 @@
+from sqlalchemy import Table, Column, String, Integer, ForeignKey
+from sqlalchemy.orm import relationship
 from flask_sqlalchemy import SQLAlchemy
+
 import random 
 import string 
 from datetime import datetime
@@ -8,6 +11,13 @@ db = SQLAlchemy()
 def generateString():
     characters = string.ascii_uppercase + string.digits
     return ''.join(random.choices(characters, k=15))
+
+friendship_association = Table(
+    'friendship',
+    db.Model.metadata,
+    Column('user_id', String(15), ForeignKey('user.id')),
+    Column('friend_id', String(15), ForeignKey('user.id'))
+)
 
 class User(db.Model):
     id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
@@ -19,9 +29,16 @@ class User(db.Model):
     profile_picture = db.Column(db.String(255), default='')
 
     # social
-    friends = db.relationship('Friendship', backref='user', lazy=True)
     level = db.Column(db.Integer, default=1)
     leagues = db.relationship('LeagueMembership', backref='user', lazy=True)
+    friends = db.relationship(
+        'User', 
+        secondary=friendship_association,
+        primaryjoin=id==friendship_association.c.user_id,
+        secondaryjoin=id==friendship_association.c.friend_id,
+        backref='friend_of',
+        lazy='dynamic'
+    )
 
     # study
     progress_today = db.Column(db.Float, default=0.0)
@@ -29,14 +46,9 @@ class User(db.Model):
     study_hours_last_5 = db.Column(db.Float, default=0.0)
     study_goal = db.Column(db.Float, default=0.0)
     tasks = db.relationship('Task', backref='user', lazy=True)
-    
+    phone_in_box_current = db.Column(db.Boolean, default=False)
+    last_phone_in_box_time = db.Column(db.DateTime, nullable=True)
 
-class Friendship(db.Model):
-    id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
-
-    # social
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    friend_id = db.Column(db.Integer, nullable=False)
 
 class Task(db.Model):
     id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)

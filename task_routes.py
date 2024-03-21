@@ -8,7 +8,7 @@ task_bp = Blueprint('task', __name__)
 # returns: tasks
 def get_tasks(user_id):
     tasks = Task.query.filter_by(user_id=user_id).all()
-    tasks = [{'task_id': task.id, 'content': task.content,
+    tasks = [{'task_id': task.id, 'contents': task.content,
               'created_at': task.created_at, 'due_date': task.due_date,
               'completed': task.completed} for task in tasks]
     return jsonify({'tasks': tasks}), 200
@@ -18,7 +18,10 @@ def get_tasks(user_id):
 # returns: task created
 def add_task(user_id):
     data = request.get_json()
-    content = data['content']
+    content = data['contents']
+    if 'due_date' in data:
+        due_date = data['due_date']
+        new_task = Task(user_id=user_id, content=content, due_date=due_date)
     new_task = Task(user_id=user_id, content=content)
     db.session.add(new_task)
     db.session.commit()
@@ -45,6 +48,12 @@ def task_completed(user_id, task_id):
     task.completed = True
     db.session.commit()
     return jsonify({'message': 'Task completed successfully!'}), 200
+
+## todo- get incomplete tasks
+## todo - get complete tasks
+## todo - get top incomplete task
+## todo - delete task
+## todo - get all tasks
 
 
 
