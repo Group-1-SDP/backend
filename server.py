@@ -55,5 +55,10 @@ def handle_box_phone_connected():
 def handle_box_phone_disconnected():
     socketio.emit('phoneDisconnected', broadcast=True)
 
+# isAlive
+@app.route('/api/isAlive', methods=['GET'])
+def is_alive():
+    return jsonify({'message': 'Server is alive!'}), 200
+
 if __name__ == '__main__':
     socketio.run(app, debug=True)
