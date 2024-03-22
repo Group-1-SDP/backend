@@ -41,7 +41,16 @@ def get_friends(user_id):
 @friends_bp.route('/api/<string:user_id>/remove-friend/<string:friend_id>', methods=['DELETE'])
 # returns: friend remove
 def remove_friend(user_id, friend_id):
-    friendship = Friendship.query.filter_by(user_id=user_id, friend_id=friend_id).first()
-    db.session.delete(friendship)
+    
+    user = User.query.filter_by(id=user_id).first()
+    friend = User.query.filter_by(id=friend_id).first()
+
+    if not friend:
+        return jsonify({'message': 'Friend does not exist!'}), 400
+
+    if friend not in user.friends:
+        return jsonify({'message': 'Friend not found!'}), 400
+
+    user.friends.remove(friend)
     db.session.commit()
     return jsonify({'message': 'Friend removed successfully!'}), 200
