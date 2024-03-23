@@ -19,7 +19,7 @@ def register():
         return jsonify({'message': 'User already exists.'}), 400
     
     email_regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w+$'
-    if not re.search(email_regex,email):
+    if not re.search(email_regex, email, re.IGNORECASE):
         return jsonify({'message': 'Invalid email.'}), 400
 
     email_already_exists = User.query.filter_by(email=email).first()
