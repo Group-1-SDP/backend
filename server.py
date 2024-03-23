@@ -28,6 +28,11 @@ app.register_blueprint(user_bp)
 app.register_blueprint(task_bp)
 app.register_blueprint(friends_bp)
 
+# isAlive
+@app.route("/api/isAlive", methods=['GET'])
+def isAlive():
+    return jsonify({'message': 'Alive!'}), 200
+
 # SocketIO
 @app.route("/websocket/phoneConnected", methods=['GET'])
 def phoneConnected():
