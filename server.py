@@ -9,6 +9,7 @@ from models import db
 from user_routes import user_bp
 from task_routes import task_bp
 from friends_routes import friends_bp
+from study_routes import study_bp
 
 import re
 
@@ -27,6 +28,7 @@ with app.app_context():
 app.register_blueprint(user_bp)
 app.register_blueprint(task_bp)
 app.register_blueprint(friends_bp)
+app.register_blueprint(study_bp)
 
 # SocketIO
 @app.route("/websocket/phoneConnected", methods=['GET'])

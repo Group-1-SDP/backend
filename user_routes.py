@@ -54,10 +54,12 @@ def get_user(user_id):
     if not user:
         return jsonify({'message': 'User not found!'}), 404
     
-    return jsonify({'user': {'id': user_id, 'username': user.username,
+    return jsonify( {'id': user_id, 'username': user.username,
                               'email': user.email, 'progress_today': user.progress_today,
                               'study_hours_today': user.study_hours_today, 'study_hours_last_5': user.study_hours_last_5,
-                              'study_goal': user.study_goal, 'profile_picture': user.profile_picture}}), 200
+                               'profile_picture': user.profile_picture, 'level': user.level, 
+                              'current_xp': user.current_xp, 'study_goal_daily': user.study_goal_daily,
+                              'study_goal_session': user.study_goal_session, }), 200
 
 @user_bp.route('/api/<string:user_id>/update', methods=['PUT'])
 def update_user(user_id):
@@ -100,3 +102,44 @@ def update_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'User updated successfully!'}), 200
+
+@user_bp.route('/api/<string:user_id>/update-study-goals', methods=['PUT'])
+def update_study_goals(user_id):
+    data = request.get_json()
+    if data['daily_study_goal']:
+        daily_study_goal = data['daily_study_goal']
+
+    if data ['session_study_goal']:
+        session_study_goal = data['session_study_goal']
+
+    print(data['scheduling_enabled'])
+    scheduling_enabled = data['scheduling_enabled']
+
+    
+    user = User.query.filter_by(id=user_id).first()
+
+    if not user:
+        return jsonify({'message': 'User not found.'}), 404
+
+    if daily_study_goal != "":
+        user.study_goal_daily = daily_study_goal
+
+    if session_study_goal != "":
+        user.study_goal_session = session_study_goal
+
+    if scheduling_enabled != "":
+        user.scheduling_enabled = scheduling_enabled
+
+    db.session.commit()
+
+    return jsonify({'message': 'Study goals updated successfully!'}), 200
+
+@user_bp.route('/api/<string:user_id>/get-study-goals', methods=['GET'])
+def get_study_goals(user_id):
+    user = User.query.filter_by(id=user_id).first()
+
+    if not user:
+        return jsonify({'message': 'User not found.'}), 404
+
+    return jsonify({'study_goals': {'daily_study_goal': user.study_goal_daily, 'session_study_goal': user.study_goal_session, 'scheduling_enabled': user.scheduling_enabled}}), 200
+

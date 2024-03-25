@@ -26,10 +26,11 @@ class User(db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    profile_picture = db.Column(db.String(255), default='')
+    profile_picture = db.Column(db.String(255), default='koala.jpg')
 
     # social
     level = db.Column(db.Integer, default=1)
+    current_xp = db.Column(db.Integer, default=0)
     leagues = db.relationship('LeagueMembership', backref='user', lazy=True)
     friends = db.relationship(
         'User', 
@@ -43,11 +44,21 @@ class User(db.Model):
     # study
     progress_today = db.Column(db.Float, default=0.0)
     study_hours_today = db.Column(db.Float, default=0.0)
-    study_hours_last_5 = db.Column(db.Float, default=0.0)
-    study_goal = db.Column(db.Float, default=0.0)
+    study_hours_last_5 = db.Column(db.String(255), default='0,0,0,0,0')
+
+    study_goal_daily = db.Column(db.Float, default=50)
+    study_goal_session = db.Column(db.Float, default=25)
+
     tasks = db.relationship('Task', backref='user', lazy=True)
+
+    # time tracking phone
     phone_in_box_current = db.Column(db.Boolean, default=False)
     last_phone_in_box_time = db.Column(db.DateTime, nullable=True)
+
+    # settings
+    notification_detection_enabled = db.Column(db.Boolean, default=False)
+    tickagotchi_enabled = db.Column(db.Boolean, default=False)
+    scheduling_enabled = db.Column(db.Boolean, default=False)
 
 
 class Task(db.Model):
