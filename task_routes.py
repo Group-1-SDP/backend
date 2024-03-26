@@ -49,12 +49,35 @@ def task_completed(user_id, task_id):
     db.session.commit()
     return jsonify({'message': 'Task completed successfully!'}), 200
 
-## todo- get incomplete tasks
-## todo - get complete tasks
-## todo - get top incomplete task
-## todo - delete task
-## todo - get all tasks
+@task_bp.route('/api/<string:user_id>/delete-task', methods=['POST'])
+def delete_task(user_id):
+    data = request.get_json()
+    task_id = data['task_id']
 
+    task_to_delete = Task.query.filter_by(user_id=user_id, id=task_id).first()
+
+    if task_to_delete:
+        db.session.delete(task_to_delete)
+        db.session.commit()
+        return jsonify({'message': 'Task deleted successfully!'}), 200
+    else:
+        return jsonify({'message': 'Task not found'}), 404
+
+@task_bp.route('/api/<string:user_id>/incomplete-tasks', methods=['GET'])
+def get_incomplete_tasks(user_id):
+    tasks = Task.query.filter_by(user_id=user_id, completed=False).all()
+    tasks = [{'task_id': task.id, 'contents': task.content,
+              'created_at': task.created_at, 'due_date': task.due_date,
+              'completed': task.completed} for task in tasks]
+    return jsonify({'tasks': tasks}), 200
+
+@task_bp.route('/api/<string:user_id>/completed-tasks', methods=['GET'])
+def get_completed_tasks(user_id):
+    tasks = Task.query.filter_by(user_id=user_id, completed=True).all()
+    tasks = [{'task_id': task.id, 'contents': task.content,
+              'created_at': task.created_at, 'due_date': task.due_date,
+              'completed': task.completed} for task in tasks]
+    return jsonify({'tasks': tasks}), 200
 
 
 
