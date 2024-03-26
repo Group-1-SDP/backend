@@ -31,15 +31,20 @@ app.register_blueprint(friends_bp)
 app.register_blueprint(study_bp)
 
 # SocketIO
-@app.route("/websocket/phoneConnected", methods=['GET'])
+@app.route("/websocket/phoneConnected", methods=['POST'])
 def phoneConnected():
-    socketio.emit('phoneConnected', broadcast=True)
+    socketio.emit('phoneConnected')
     return jsonify({'message': 'Phone connected!'}), 200
 
 @app.route("/websocket/phoneDisconnected", methods=['POST'])
 def phoneDisconnected():
-    socketio.emit('phoneDisconnected', broadcast=True)
+    socketio.emit('phoneDisconnected')
     return jsonify({'message': 'Phone disconnected!'}), 200
+
+@app.route("/websocket/study-goal-reached", methods=['GET'])
+def studyGoalReached():
+    socketio.emit('task-complete')
+    return jsonify({'message': 'Rewarded!'}), 200
 
 @socketio.on('connect')
 def handle_connect():
