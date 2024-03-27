@@ -62,6 +62,29 @@ def get_user(user_id):
                               'current_xp': user.current_xp, 'study_goal_daily': user.study_goal_daily,
                               'study_goal_session': user.study_goal_session, }), 200
 
+@user_bp.route('/api/<string:user_id>/friends-study-hours', methods=['GET'])
+def get_user_friends_study_hours(user_id):
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    friends_data = []
+    
+    for friend in user.friends:
+        friend_data = {
+            "username": friend.username,
+            "study_hours_today": friend.study_hours_today
+        }
+        friends_data.append(friend_data)
+
+    user_data = {
+        "username": user.username,
+        "study_hours_today": user.study_hours_today
+    }
+    friends_data.append(user_data)
+    
+    return jsonify(friends_data), 200
+
 @user_bp.route('/api/<string:user_id>/update', methods=['PUT'])
 def update_user(user_id):
     data = request.get_json()
