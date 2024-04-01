@@ -18,21 +18,26 @@ def get_tasks(user_id):
     return jsonify({'tasks': tasks}), 200
 
 @task_bp.route('/api/<string:user_id>/add-task', methods=['POST'])
-# params: content
+# params: content, due_date (optional)
 # returns: task created
 def add_task(user_id):
+    print(f'Adding task for user {user_id}.')
     data = request.get_json()
+    print(f'Data: {data}')
     # check if the data actually has a content field
-    if not 'contents' in data:
+    if not 'content' in data:
         return jsonify({'message': 'No content provided.'}), 400
-    content = data['contents']
+    content = data['content']
     if 'due_date' in data:
         due_date = data['due_date']
         new_task = Task(user_id=user_id, content=content, due_date=due_date)
     # check the user actually exists before adding the task
     user = User.query.filter_by(id=user_id).first()
     if not user:
-        return jsonify({'message': 'Invalid User ID'}), 404
+        print(f'User {user_id} does not exist.')
+        return jsonify({'message': 'Invalid User ID.'}), 404
+    else:
+        print(f'User {user_id} exists.')
     new_task = Task(user_id=user_id, content=content)
     db.session.add(new_task)
     db.session.commit()

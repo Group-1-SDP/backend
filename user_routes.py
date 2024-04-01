@@ -100,3 +100,9 @@ def update_user(user_id):
     db.session.commit()
 
     return jsonify({'message': 'User updated successfully!'}), 200
+
+@user_bp.route('/api/debug/user_ids', methods=['GET'])
+def get_user_ids():
+    users = User.query.all()
+    user_ids = [user.id for user in users]
+    return jsonify({'user_ids': user_ids}), 200
