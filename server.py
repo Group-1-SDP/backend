@@ -10,6 +10,7 @@ from user_routes import user_bp
 from task_routes import task_bp
 from friends_routes import friends_bp
 from study_routes import study_bp
+from models import Task
 
 import re
 
@@ -41,10 +42,29 @@ def phoneDisconnected():
     socketio.emit('phoneDisconnected')
     return jsonify({'message': 'Phone disconnected!'}), 200
 
-@app.route("/websocket/study-goal-reached", methods=['GET'])
+@app.route("/websocket/study-goal-reached", methods=['POST'])
 def studyGoalReached():
-    socketio.emit('task-complete')
+    socketio.emit('timer-done')
     return jsonify({'message': 'Rewarded!'}), 200
+
+@app.route('/api/<string:user_id>/complete-task/<string:task_id>', methods=['PATCH'])
+# returns: task completed
+def task_completed(user_id, task_id):
+    socketio.emit('task-complete')
+    task = Task.query.filter_by(id=task_id, user_id=user_id).first()
+    task.completed = True
+    db.session.commit()
+    return jsonify({'message': 'Task completed successfully!'}), 200
+
+@app.route('/api/notifications-changed', methods=['POST'])
+def update_module_settings():
+    socketio.emit('notifications')
+    return jsonify({'message': 'Module settings updated successfully!'}), 200
+
+@app.route('/api/tickagotchi-changed', methods=['POST'])
+def update_tickagotchi_settings():
+    socketio.emit('tickagotchi')  
+    return jsonify({'message': 'Module settings updated successfully!'}), 200
 
 @socketio.on('connect')
 def handle_connect():

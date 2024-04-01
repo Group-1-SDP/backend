@@ -24,10 +24,28 @@ def phone_disconnected(user_id):
         return jsonify({'error': 'User not found'}), 404
 
     data = request.get_json()
-    time_studied = data['time_studied']
+    time_since = data.get('time_since')
 
-    user.study_hours_today = time_studied
-    print(user.study_hours_today)
+    if not time_since:
+        return jsonify({'error': 'Invalid request, time_since parameter missing'}), 400
+
+    date_format = "%d/%m/%Y, %H:%M:%S"
+    try:
+        phone_out_time = datetime.strptime(time_since, date_format)
+    except ValueError:
+        return jsonify({'error': 'Invalid time_since format'}), 400
+
+    last_phone_in_box_time = user.last_phone_in_box_time
+    time_connected = (last_phone_in_box_time - phone_out_time).total_seconds()
+    
+    if time_connected < 0:
+        return jsonify({'error': 'Invalid time_since value, it should be before the last phone in box time'}), 400
+
+    study_time_increment = time_connected / 6 
+
+    user.study_hours_today += study_time_increment
+    time_studied = user.study_hours_today
+
     db.session.commit()
 
-    return jsonify({'message': 'Phone disconnected!'}), 200
+    return jsonify({'message': 'Phone disconnected!', 'time_studied': time_studied}), 200
