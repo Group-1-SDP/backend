@@ -59,8 +59,9 @@ class User(db.Model):
     notification_detection_enabled = db.Column(db.Boolean, default=False)
     tickagotchi_enabled = db.Column(db.Boolean, default=False)
     scheduling_enabled = db.Column(db.Boolean, default=False)
-
-
+    custom_words_list = db.Column(db.String, default="")
+    
+    
 class Task(db.Model):
     id = db.Column(db.String(15), default=generateString, unique=True, primary_key=True)
     user_id = db.Column(db.String(15), db.ForeignKey('user.id'), nullable=False)

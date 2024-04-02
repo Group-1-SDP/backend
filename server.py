@@ -31,6 +31,9 @@ app.register_blueprint(task_bp)
 app.register_blueprint(friends_bp)
 app.register_blueprint(study_bp)
 
+notificationDetection = False
+tickagotchiMode = False
+
 # SocketIO
 @app.route("/websocket/phoneConnected", methods=['POST'])
 def phoneConnected():
@@ -65,6 +68,11 @@ def update_module_settings():
 def update_tickagotchi_settings():
     socketio.emit('tickagotchi')  
     return jsonify({'message': 'Module settings updated successfully!'}), 200
+
+@app.route('/api/box-settings', methods=['GET'])
+def get_box_settings():
+    return jsonify({'notificationDetection': notificationDetection, 'tickagotchiMode': tickagotchiMode}), 200
+
 
 @socketio.on('connect')
 def handle_connect():

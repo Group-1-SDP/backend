@@ -54,7 +54,7 @@ def get_user(user_id):
     if not user:
         return jsonify({'message': 'User not found!'}), 404
     
-    print(user.study_hours_today)
+    
     return jsonify( {'id': user_id, 'username': user.username,
                               'email': user.email, 'progress_today': user.progress_today,
                               'study_hours_today': user.study_hours_today, 'study_hours_last_5': user.study_hours_last_5,
